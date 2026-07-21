@@ -2,9 +2,8 @@ name: Daily Shorts Generator
 
 on:
   schedule:
-    # Runs automatically every day at 08:00 AM UTC
     - cron: '0 8 * * *'
-  workflow_dispatch: # Allows manual trigger from phone browser anytime
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,7 +17,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: Install System Dependencies (FFmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
         run: |
           pip install google-genai edge-tts requests yt-dlp
 
