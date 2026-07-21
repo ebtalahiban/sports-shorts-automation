@@ -52,7 +52,7 @@ async def run_pipeline():
         "model": "qwen/qwen-2.5-72b-instruct:free",
         "messages": [{"role": "user", "content": prompt}]
     }
-    
+
     response = requests.post(
         "https://openrouter.ai/api/v1/chat/completions", 
         headers=headers, 
@@ -60,6 +60,14 @@ async def run_pipeline():
     )
     
     response_data = response.json()
+    
+    # --- ADD THIS NEW ERROR HANDLING ---
+    if 'choices' not in response_data:
+        print("❌ OPENROUTER API ERROR:")
+        print(json.dumps(response_data, indent=2))
+        raise ValueError("OpenRouter request failed. Check the logs above for details.")
+    # -----------------------------------
+        
     raw_text = response_data['choices'][0]['message']['content']
     
     clean_json = clean_json_response(raw_text)
