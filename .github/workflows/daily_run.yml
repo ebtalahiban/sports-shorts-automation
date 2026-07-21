@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install google-genai edge-tts requests yt-dlp
+          pip install requests yt-dlp
 
       - name: Run Pipeline
         env:
