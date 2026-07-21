@@ -6,40 +6,32 @@ import glob
 import requests
 import yt_dlp
 import edge_tts
-from google import genai
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
-if not BOT_TOKEN or not CHAT_ID or not GEMINI_KEY:
-    raise ValueError("Missing one or more required Secrets: GEMINI_API_KEY, TELEGRAM_BOT_TOKEN, or TELEGRAM_CHAT_ID")
-
-client = genai.Client(api_key=GEMINI_KEY)
+if not BOT_TOKEN or not CHAT_ID or not OPENROUTER_KEY:
+    raise ValueError("Missing Secrets: OPENROUTER_API_KEY, TELEGRAM_BOT_TOKEN, or TELEGRAM_CHAT_ID")
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    res = requests.post(url, data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"})
-    if res.status_code != 200:
-        print(f"Telegram Message Error: {res.text}")
+    requests.post(url, data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"})
 
 def send_telegram_file(file_path, endpoint="sendDocument", caption=""):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/{endpoint}"
     file_key = "video" if endpoint == "sendVideo" else "document"
     with open(file_path, "rb") as f:
-        res = requests.post(url, data={"chat_id": CHAT_ID, "caption": caption}, files={file_key: f})
-        if res.status_code != 200:
-            print(f"Telegram File Upload Error ({endpoint}): {res.text}")
+        requests.post(url, data={"chat_id": CHAT_ID, "caption": caption}, files={file_key: f})
 
 def clean_json_response(text):
-    """Safely extracts raw JSON from Gemini markdown output."""
     match = re.search(r'\{.*\}', text, re.DOTALL)
     if match:
         return match.group(0)
     return text
 
 async def run_pipeline():
-    print("1. Querying Gemini API...")
+    print("1. Querying Qwen via OpenRouter...")
     prompt = """
     Give me a viral sports concept for YouTube Shorts.
     Return strictly JSON without markdown wrappers:
@@ -50,12 +42,27 @@ async def run_pipeline():
         "instructions": "Clip 1 (0-3s): Highlight. Clip 2 (3-7s): Reaction. Overlay: [TEXT]"
     }
     """
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt
+    
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": "qwen/qwen-2.5-72b-instruct:free",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions", 
+        headers=headers, 
+        json=payload
     )
     
-    clean_json = clean_json_response(response.text)
+    response_data = response.json()
+    raw_text = response_data['choices'][0]['message']['content']
+    
+    clean_json = clean_json_response(raw_text)
     data = json.loads(clean_json)
     
     msg = f"🚀 *NEW SHORTS PACKAGE: {data['title']}*\n\n"
