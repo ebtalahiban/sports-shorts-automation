@@ -23,10 +23,15 @@ def send_telegram_video(file_path, caption=""):
         requests.post(url, data={"chat_id": CHAT_ID, "caption": caption}, files={"video": f})
 
 def clean_json_response(text):
+    # Strip markdown wrappers
+    text = re.sub(r'^```json\s*', '', text, flags=re.IGNORECASE | re.MULTILINE)
+    text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
+    
     match = re.search(r'\{.*\}', text, re.DOTALL)
     if match:
-        return match.group(0)
-    return text
+        return match.group(0).strip()
+    return text.strip()
+
 
 def download_vertical_clips(search_term, output_dir="downloaded_clips", max_clips=5):
     """Searches and downloads vertical shorts automatically."""
@@ -65,11 +70,13 @@ async def run_pipeline():
     
     payload = {
         "model": "openrouter/free",
-        "messages": [{"role": "user", "content": prompt}]
+        "messages": [{"role": "user", "content": prompt}],
+        "response_format": {"type": "json_object"},
+        "plugins": [{"id": "response-healing"}]
     }
 
     response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions", 
+        "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)", 
         headers=headers, 
         json=payload
     )
@@ -82,8 +89,17 @@ async def run_pipeline():
         raise ValueError("OpenRouter request failed. Check logs.")
         
     raw_text = response_data['choices'][0]['message']['content']
-    
     clean_json = clean_json_response(raw_text)
+    
+    # --- NEW ERROR HANDLING BLOCK ---
+    try:
+        data = json.loads(clean_json)
+    except json.JSONDecodeError:
+        print("❌ FAILED TO PARSE JSON! THIS IS WHAT THE AI RETURNED:")
+        print(raw_text)
+        raise ValueError("AI returned invalid JSON. See the raw output above.")
+    # --------------------------------
+
     data = json.loads(clean_json)
     
     # 2. Send Blueprint to Telegram
