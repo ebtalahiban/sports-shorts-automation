@@ -32,7 +32,6 @@ def clean_json_response(text):
         return match.group(0).strip()
     return text.strip()
 
-
 def download_vertical_clips(search_term, output_dir="downloaded_clips", max_clips=5):
     """Searches and downloads vertical shorts automatically."""
     os.makedirs(output_dir, exist_ok=True)
@@ -76,7 +75,7 @@ async def run_pipeline():
     }
 
     response = requests.post(
-        "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)", 
+        "https://openrouter.ai/api/v1/chat/completions", 
         headers=headers, 
         json=payload
     )
@@ -99,8 +98,6 @@ async def run_pipeline():
         print(raw_text)
         raise ValueError("AI returned invalid JSON. See the raw output above.")
     # --------------------------------
-
-    data = json.loads(clean_json)
     
     # 2. Send Blueprint to Telegram
     msg = f"🚀 *NEW SHORTS PACKAGE: {data['title']}*\n\n"
