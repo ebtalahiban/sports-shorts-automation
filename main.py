@@ -36,17 +36,19 @@ def download_vertical_clips(search_term, output_dir="downloaded_clips", max_clip
     """Searches and downloads vertical shorts automatically."""
     os.makedirs(output_dir, exist_ok=True)
     
-    # Using YouTube Shorts search as a highly reliable backend for vertical clips
-    search_query = f"ytsearch{max_clips}:{search_term} shorts vertical"
+    # Search for 15 clips to build a buffer in case some get blocked by bot-detection
+    search_query = f"ytsearch15:{search_term} shorts vertical"
     
     ydl_opts = {
         'format': 'bestvideo[ext=mp4][height<=1920]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': f'{output_dir}/clip_%(autonumber)s.%(ext)s',
         'quiet': True,
         'no_warnings': True,
+        'ignoreerrors': True,         # Skip blocked videos instead of crashing
+        'max_downloads': max_clips,   # Stop downloading once we successfully hit the limit
     }
     
-    print(f"Downloading {max_clips} clips for query: {search_term}")
+    print(f"Attempting to download {max_clips} clips for query: {search_term}")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([search_query])
 
@@ -90,14 +92,13 @@ async def run_pipeline():
     raw_text = response_data['choices'][0]['message']['content']
     clean_json = clean_json_response(raw_text)
     
-    # --- NEW ERROR HANDLING BLOCK ---
+    # --- ERROR HANDLING BLOCK ---
     try:
         data = json.loads(clean_json)
     except json.JSONDecodeError:
         print("❌ FAILED TO PARSE JSON! THIS IS WHAT THE AI RETURNED:")
         print(raw_text)
         raise ValueError("AI returned invalid JSON. See the raw output above.")
-    # --------------------------------
     
     # 2. Send Blueprint to Telegram
     msg = f"🚀 *NEW SHORTS PACKAGE: {data['title']}*\n\n"
@@ -109,7 +110,7 @@ async def run_pipeline():
     download_dir = "downloaded_clips"
     download_vertical_clips(data["search_term"], output_dir=download_dir, max_clips=5)
 
-    # 4. Send 5 MP4s to Telegram
+    # 4. Send MP4s to Telegram
     print("3. Sending MP4 Files to Telegram...")
     video_files = sorted(glob.glob(f"{download_dir}/*.mp4"))
     
@@ -119,7 +120,7 @@ async def run_pipeline():
         for idx, vid_path in enumerate(video_files[:5], start=1):
             send_telegram_video(vid_path, caption=f"📹 Raw Clip #{idx}")
 
-    print("✅ Finished sending instructions and 5 videos!")
+    print("✅ Finished sending instructions and videos!")
 
 if __name__ == "__main__":
     asyncio.run(run_pipeline())
