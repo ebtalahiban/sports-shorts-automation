@@ -60,7 +60,9 @@ async def run_pipeline():
     {
         "title": "Short Title",
         "search_term": "curry clutch shots",
-        "instructions": "Clip 1 (0-2s): Hook. Clip 2 (2-4s): Build-up. Clip 3 (4-6s): Action. Clip 4 (6-8s): Climax. Clip 5 (8-10s): Reaction/Ending. Overlay: [TEXT]"
+        "overlay_text": "Catchy text to stay on screen for the ENTIRE video (e.g., 'Bro really did that 🤯')",
+        "instructions": "Clip 1 (0-2s): Hook. Clip 2 (2-4s): Build-up. Clip 3 (4-6s): Action. Clip 4 (6-8s): Climax. Clip 5 (8-10s): Reaction/Ending.",
+        "seo_caption": "Engaging caption for the video including 5-7 highly searchable hashtags."
     }
     """
     
@@ -102,7 +104,10 @@ async def run_pipeline():
     
     # 2. Send Blueprint to Telegram
     msg = f"🚀 *NEW SHORTS PACKAGE: {data['title']}*\n\n"
-    msg += f"🎬 *EDIT BLUEPRINT:*\n{data['instructions']}"
+    msg += f"🔠 *ON-SCREEN OVERLAY:*\n`{data['overlay_text']}`\n\n"
+    msg += f"🎬 *EDIT BLUEPRINT:*\n{data['instructions']}\n\n"
+    msg += f"📱 *SEO CAPTION:*\n{data['seo_caption']}"
+    
     send_telegram_message(msg)
 
     # 3. Download 5 Clips
