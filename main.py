@@ -38,7 +38,7 @@ async def run_pipeline():
             {
                 "content_idea": "Description of the sports highlight concept",
                 "title": "Short Catchy Title",
-                "search_term": "curry clutch #shorts",
+                "search_term": "curry clutch",
                 "overlay_text": "TEXT THAT STAYS ON SCREEN THE ENTIRE VIDEO",
                 "seo_caption": "Short caption with 5-7 SEO hashtags"
             }
@@ -90,19 +90,18 @@ async def run_pipeline():
     if not ideas:
         raise ValueError("No ideas array found in AI response.")
 
-    # Calculate current date in PH Time (UTC+8) for the folder structure
     ph_date = (datetime.utcnow() + timedelta(hours=8)).strftime('%Y-%m-%d')
 
     send_telegram_message("🔥 *DAILY SPORTS SHORTS BATCH (5 IDEAS)* 🔥\n-----------------------------------")
 
     for idx, idea in enumerate(ideas, start=1):
-        search_term = idea.get('search_term', 'sports highlights').replace('"', '')
+        raw_search_term = idea.get('search_term', 'sports highlights').replace('"', '')
+        search_query = f"{raw_search_term} #shorts"
         video_folder = f"video-{idx}"
         
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
-        # 🚀 NEW: Added '--match-filter "duration <= 60"' and increased search pool to ytsearch20
-        scrape_command = f'yt-dlp "ytsearch20:{search_term}" --match-filter "duration <= 60" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
+        scrape_command = f'yt-dlp "ytsearch100:{search_query}" --match-filter "duration <= 60" -f "bestvideo[width<height][ext=mp4]+bestaudio[ext=m4a]/best[width<height][ext=mp4]" -i --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
