@@ -29,8 +29,12 @@ async def run_pipeline():
     print("1. Querying AI via OpenRouter for 5 Daily Ideas...")
     
     prompt = """
-    You are a professional viral sports content producer.
+    You are a professional viral sports content producer for TikTok and Instagram Reels.
     Generate 5 viral sports concept ideas for 9:16 vertical short videos in English only.
+    
+    CRITICAL INSTRUCTIONS:
+    - "overlay_text": Must be a highly engaging, relatable hook that stops scrollers. Use Gen-Z/TikTok slang, POV formats, or funny observations (e.g., "BRO REALLY THOUGHT HE HAD A CHANCE 💀", "POV: YOU TRIGGERED HIS PRIME MODE 🔥", "DEFENDER WAS FIGHTING FOR HIS LIFE 😭"). Keep it punchy and short.
+    - "seo_caption": MUST start with a 1-2 sentence engaging description or question to drive comments, followed by 5-7 SEO hashtags. Do not just output hashtags alone.
     
     Return strictly a JSON object with an "ideas" array containing 5 items:
     {
@@ -39,8 +43,8 @@ async def run_pipeline():
                 "content_idea": "Description of the sports highlight concept",
                 "title": "Short Catchy Title",
                 "search_term": "curry clutch",
-                "overlay_text": "TEXT THAT STAYS ON SCREEN THE ENTIRE VIDEO",
-                "seo_caption": "Short caption with 5-7 SEO hashtags"
+                "overlay_text": "BRO REALLY THOUGHT HE HAD A CHANCE 💀",
+                "seo_caption": "There is absolutely no way he pulled this off in the 4th quarter! Who is your favorite clutch player of all time? 👇 #nba #basketball #clutch #stephcurry #sportsedits #hoops"
             }
         ]
     }
@@ -90,7 +94,6 @@ async def run_pipeline():
     if not ideas:
         raise ValueError("No ideas array found in AI response.")
 
-    # Calculate current date in PH Time (UTC+8) for the folder structure
     ph_date = (datetime.utcnow() + timedelta(hours=8)).strftime('%Y-%m-%d')
 
     send_telegram_message("🔥 *DAILY SPORTS SHORTS BATCH (5 IDEAS)* 🔥\n-----------------------------------")
@@ -102,8 +105,8 @@ async def run_pipeline():
         
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
-        # Simplified format string to prevent iOS JavaScript runtime crashes
-        scrape_command = f'yt-dlp "ytsearch100:{search_query}" --match-filter "duration <= 30" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -i --max-downloads 5 -o "{output_path}"'
+        # 🚀 NEW: Added [vcodec^=avc1] to strictly force the Apple-compatible H.264 codec
+        scrape_command = f'yt-dlp "ytsearch30:{search_query}" --match-filter "duration <= 60" -f "bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/best[vcodec^=avc1][ext=mp4]/best[ext=mp4]" -i --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
