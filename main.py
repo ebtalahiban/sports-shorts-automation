@@ -41,7 +41,8 @@ async def run_pipeline():
                 "title": "Short Catchy Title",
                 "search_term": "curry clutch shots",
                 "overlay_text": "TEXT THAT STAYS ON SCREEN THE ENTIRE VIDEO",
-                "seo_caption": "Short caption with 5-7 SEO hashtags"
+                "short_description": "Engaging 1-2 sentence video caption to write under the post",
+                "hashtags": "#Basketball #Clutch #NBA #ViralShorts #Sports"
             }
         ]
     }
@@ -99,7 +100,8 @@ async def run_pipeline():
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
         msg += f"💡 *Concept:* {idea.get('content_idea', '')}\n\n"
         msg += f"🔠 *Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
-        msg += f"📱 *Caption & Hashtags:*\n{idea.get('seo_caption', '')}\n\n"
+        msg += f"📝 *Caption Description:*\n{idea.get('short_description', '')}\n\n"
+        msg += f"🏷️ *Hashtags:*\n`{idea.get('hashtags', '')}`\n\n"
         msg += f"💻 *Local Terminal Scrape Script:*\n`{scrape_command}`"
         
         send_telegram_message(msg)
