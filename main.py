@@ -103,7 +103,7 @@ async def run_pipeline():
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
         # Simplified format string to prevent iOS JavaScript runtime crashes
-        scrape_command = f'yt-dlp "ytsearch30:{search_query}" --match-filter "duration <= 60" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -i --max-downloads 5 -o "{output_path}"'
+        scrape_command = f'yt-dlp "ytsearch100:{search_query}" --match-filter "duration <= 30" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -i --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
