@@ -20,7 +20,6 @@ def clean_json_response(text):
     text = re.sub(r'^```json\s*', '', text, flags=re.IGNORECASE | re.MULTILINE)
     text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
     
-    # Try to grab arrays or objects depending on what the AI spits out
     match = re.search(r'\[.*\]|\{.*\}', text, re.DOTALL)
     if match:
         return match.group(0).strip()
@@ -39,7 +38,7 @@ async def run_pipeline():
             {
                 "content_idea": "Description of the sports highlight concept",
                 "title": "Short Catchy Title",
-                "search_term": "curry clutch shots",
+                "search_term": "curry clutch #shorts",
                 "overlay_text": "TEXT THAT STAYS ON SCREEN THE ENTIRE VIDEO",
                 "seo_caption": "Short caption with 5-7 SEO hashtags"
             }
@@ -77,7 +76,6 @@ async def run_pipeline():
     
     try:
         data = json.loads(clean_json)
-        # Bulletproof check: Handle both raw lists and dictionaries safely
         if isinstance(data, list):
             ideas = data
         elif isinstance(data, dict):
@@ -101,14 +99,12 @@ async def run_pipeline():
         search_term = idea.get('search_term', 'sports highlights').replace('"', '')
         video_folder = f"video-{idx}"
         
-        # Inject the date and folder structure directly into the yt-dlp output path
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
-        # Define the exact copy-paste scripts
-        scrape_command = f'yt-dlp "ytsearch5:{search_term} shorts vertical" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
+        # 🚀 NEW: Added '--match-filter "duration <= 60"' and increased search pool to ytsearch20
+        scrape_command = f'yt-dlp "ytsearch20:{search_term}" --match-filter "duration <= 60" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
-        # Construct the final Telegram message payload
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
         msg += f"💡 *Concept:* {idea.get('content_idea', '')}\n\n"
         msg += f"🔠 *Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
