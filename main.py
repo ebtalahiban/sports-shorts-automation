@@ -90,6 +90,7 @@ async def run_pipeline():
     if not ideas:
         raise ValueError("No ideas array found in AI response.")
 
+    # Calculate current date in PH Time (UTC+8) for the folder structure
     ph_date = (datetime.utcnow() + timedelta(hours=8)).strftime('%Y-%m-%d')
 
     send_telegram_message("🔥 *DAILY SPORTS SHORTS BATCH (5 IDEAS)* 🔥\n-----------------------------------")
@@ -101,7 +102,8 @@ async def run_pipeline():
         
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
-        scrape_command = f'yt-dlp "ytsearch100:{search_query}" --match-filter "duration <= 60" -f "bestvideo[width<height][ext=mp4]+bestaudio[ext=m4a]/best[width<height][ext=mp4]" -i --max-downloads 5 -o "{output_path}"'
+        # Simplified format string to prevent iOS JavaScript runtime crashes
+        scrape_command = f'yt-dlp "ytsearch30:{search_query}" --match-filter "duration <= 60" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -i --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
