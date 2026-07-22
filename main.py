@@ -95,13 +95,18 @@ async def run_pipeline():
         
         # Inject the date and folder structure directly into the yt-dlp output path
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
-        scrape_command = f'yt-dlp "ytsearch5:{search_term} shorts vertical" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
         
+        # Define the exact copy-paste scripts
+        scrape_command = f'yt-dlp "ytsearch5:{search_term} shorts vertical" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
+        merge_command = f'python merge_clips.py {ph_date} {video_folder}'
+        
+        # Construct the final Telegram message payload
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
         msg += f"💡 *Concept:* {idea.get('content_idea', '')}\n\n"
         msg += f"🔠 *Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
         msg += f"📱 *Caption & Hashtags:*\n{idea.get('seo_caption', '')}\n\n"
-        msg += f"💻 *Local Terminal Scrape Script:*\n`{scrape_command}`"
+        msg += f"💻 *Local Terminal Scrape Script:*\n`{scrape_command}`\n\n"
+        msg += f"🎬 *Local Merge Script:*\n`{merge_command}`"
         
         send_telegram_message(msg)
 
