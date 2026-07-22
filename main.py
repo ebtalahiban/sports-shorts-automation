@@ -3,6 +3,7 @@ import json
 import re
 import asyncio
 import requests
+from datetime import datetime, timedelta
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -16,12 +17,9 @@ def send_telegram_message(text):
     requests.post(url, data={"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"})
 
 def clean_json_response(text):
-    # Strip markdown wrappers
     text = re.sub(r'^```json\s*', '', text, flags=re.IGNORECASE | re.MULTILINE)
     text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
-    
-    # Locate outer JSON object braces
-    match = re.search(r'\{.*\}', text, re.DOTALL)
+    match = re.search(r'\[.*\]', text, re.DOTALL)
     if match:
         return match.group(0).strip()
     return text.strip()
@@ -41,8 +39,7 @@ async def run_pipeline():
                 "title": "Short Catchy Title",
                 "search_term": "curry clutch shots",
                 "overlay_text": "TEXT THAT STAYS ON SCREEN THE ENTIRE VIDEO",
-                "short_description": "Engaging 1-2 sentence video caption to write under the post",
-                "hashtags": "#Basketball #Clutch #NBA #ViralShorts #Sports"
+                "seo_caption": "Short caption with 5-7 SEO hashtags"
             }
         ]
     }
@@ -87,21 +84,23 @@ async def run_pipeline():
     if not ideas:
         raise ValueError("No ideas array found in AI response.")
 
-    # Send overview header
+    # Calculate current date in PH Time (UTC+8) for the folder structure
+    ph_date = (datetime.utcnow() + timedelta(hours=8)).strftime('%Y-%m-%d')
+
     send_telegram_message("🔥 *DAILY SPORTS SHORTS BATCH (5 IDEAS)* 🔥\n-----------------------------------")
 
-    # Send each idea neatly formatted
     for idx, idea in enumerate(ideas, start=1):
-        # Escape potential special characters for terminal safety
         search_term = idea.get('search_term', 'sports highlights').replace('"', '')
+        video_folder = f"video-{idx}"
         
-        scrape_command = f'yt-dlp "ytsearch5:{search_term} shorts vertical" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "clip_%(autonumber)s.%(ext)s"'
+        # Inject the date and folder structure directly into the yt-dlp output path
+        output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
+        scrape_command = f'yt-dlp "ytsearch5:{search_term} shorts vertical" --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --max-downloads 5 -o "{output_path}"'
         
         msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
         msg += f"💡 *Concept:* {idea.get('content_idea', '')}\n\n"
         msg += f"🔠 *Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
-        msg += f"📝 *Caption Description:*\n{idea.get('short_description', '')}\n\n"
-        msg += f"🏷️ *Hashtags:*\n`{idea.get('hashtags', '')}`\n\n"
+        msg += f"📱 *Caption & Hashtags:*\n{idea.get('seo_caption', '')}\n\n"
         msg += f"💻 *Local Terminal Scrape Script:*\n`{scrape_command}`"
         
         send_telegram_message(msg)
