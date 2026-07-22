@@ -19,7 +19,9 @@ def send_telegram_message(text):
 def clean_json_response(text):
     text = re.sub(r'^```json\s*', '', text, flags=re.IGNORECASE | re.MULTILINE)
     text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
-    match = re.search(r'\[.*\]', text, re.DOTALL)
+    
+    # Try to grab arrays or objects depending on what the AI spits out
+    match = re.search(r'\[.*\]|\{.*\}', text, re.DOTALL)
     if match:
         return match.group(0).strip()
     return text.strip()
@@ -75,7 +77,13 @@ async def run_pipeline():
     
     try:
         data = json.loads(clean_json)
-        ideas = data.get("ideas", [])
+        # Bulletproof check: Handle both raw lists and dictionaries safely
+        if isinstance(data, list):
+            ideas = data
+        elif isinstance(data, dict):
+            ideas = data.get("ideas", [])
+        else:
+            ideas = []
     except json.JSONDecodeError:
         print("❌ FAILED TO PARSE JSON:")
         print(raw_text)
