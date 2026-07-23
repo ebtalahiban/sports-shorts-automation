@@ -28,23 +28,26 @@ def clean_json_response(text):
 async def run_pipeline():
     print("1. Querying AI via OpenRouter for 5 Daily Ideas...")
     
+    # 🚀 NEW: Prompt locked to ONLY Basketball and Volleyball, tailored for the white-background meme format.
     prompt = """
     You are a professional viral sports content producer for TikTok and Instagram Reels.
-    Generate 5 viral sports concept ideas for 9:16 vertical short videos in English only.
+    Generate 5 viral concept ideas for 9:16 vertical short videos in English only.
     
     CRITICAL INSTRUCTIONS:
-    - "overlay_text": Must be a highly engaging, relatable hook that stops scrollers. Use Gen-Z/TikTok slang, POV formats, or funny observations (e.g., "BRO REALLY THOUGHT HE HAD A CHANCE 💀", "POV: YOU TRIGGERED HIS PRIME MODE 🔥", "DEFENDER WAS FIGHTING FOR HIS LIFE 😭"). Keep it punchy and short.
+    - SPORT RESTRICTION: STRICTLY focus ONLY on Basketball (e.g., NBA, streetball, college) and Volleyball (e.g., VNL, men's/women's indoors, beach, crazy spikes/saves). DO NOT generate ideas for any other sports.
+    - VISUAL FORMAT: The video will have the raw sports footage centered with a white background at the top and bottom (meme-style).
+    - "overlay_text": Must be a short, highly engaging hook meant to be placed in the top white margin in bold text. Use Gen-Z/TikTok slang or POV formats (e.g., "BRO REALLY THOUGHT HE HAD A CHANCE 💀", "LIBERO WAS FIGHTING FOR HIS LIFE 😭", "POV: YOU TRIGGERED HIS PRIME MODE 🔥"). Keep it punchy.
     - "seo_caption": MUST start with a 1-2 sentence engaging description or question to drive comments, followed by 5-7 SEO hashtags. Do not just output hashtags alone.
     
     Return strictly a JSON object with an "ideas" array containing 5 items:
     {
         "ideas": [
             {
-                "content_idea": "Description of the sports highlight concept",
+                "content_idea": "Description of the basketball or volleyball highlight concept",
                 "title": "Short Catchy Title",
-                "search_term": "curry clutch",
-                "overlay_text": "BRO REALLY THOUGHT HE HAD A CHANCE 💀",
-                "seo_caption": "There is absolutely no way he pulled this off in the 4th quarter! Who is your favorite clutch player of all time? 👇 #nba #basketball #clutch #stephcurry #sportsedits #hoops"
+                "search_term": "crazy volleyball libero saves",
+                "overlay_text": "LIBERO WAS FIGHTING FOR HIS LIFE 😭",
+                "seo_caption": "There is absolutely no way he saved this in the 5th set! Who is the best defensive player in the world right now? 👇 #volleyball #vnl #volleyballsaves #sportsedits"
             }
         ]
     }
@@ -105,13 +108,12 @@ async def run_pipeline():
         
         output_path = f"{ph_date}/{video_folder}/clip_%(autonumber)s.%(ext)s"
         
-        # 🚀 NEW: Added [vcodec^=avc1] to strictly force the Apple-compatible H.264 codec
         scrape_command = f'yt-dlp "ytsearch30:{search_query}" --match-filter "duration <= 60" -f "bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/best[vcodec^=avc1][ext=mp4]/best[ext=mp4]" -i --max-downloads 5 -o "{output_path}"'
         merge_command = f'python merge_clips.py {ph_date} {video_folder}'
         
-        msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Sports Highlight')}*\n\n"
+        msg = f"📌 *IDEA #{idx}: {idea.get('title', 'Highlight')}*\n\n"
         msg += f"💡 *Concept:* {idea.get('content_idea', '')}\n\n"
-        msg += f"🔠 *Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
+        msg += f"🔠 *Top Overlay Text:* `{idea.get('overlay_text', '')}`\n\n"
         msg += f"📱 *Caption & Hashtags:*\n{idea.get('seo_caption', '')}\n\n"
         msg += f"💻 *Local Terminal Scrape Script:*\n`{scrape_command}`\n\n"
         msg += f"🎬 *Local Merge Script:*\n`{merge_command}`"
